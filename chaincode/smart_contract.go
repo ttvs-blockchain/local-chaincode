@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 
 	"github.com/hyperledger/fabric-chaincode-go/shim"
@@ -12,37 +13,30 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-// SmartContract provides functions for managing an Transaction
+// SmartContract provides functions for managing an Transaction.
 type SmartContract struct {
 	contractapi.Contract
 }
 
-// Transaction describes basic details of what makes up a simple transaction
-// Insert struct field in alphabetic order => to achieve determinism across languages
-// golang keeps the order when marshal to json but doesn't order automatically
+// Transaction describes basic details of what makes up a simple transaction.
+// Insert struct field in alphabetic order => to achieve determinism across languages.
+// golang keeps the order when marshal to json but doesn't order automatically.
 // Binding: the binding of personal information hash and certificate information hash
 // i.e. (person_info_hash || cert_into_hash)
 // Timestamp: the timestamp of the transaction
 type Transaction struct {
-	//From      string `json:"From"`
-	//To        string `json:"To"`
-	//Amount    string `json:"Amount"`
 	Binding   string `json:"Binding"`
 	Timestamp int64  `json:"Timestamp"`
 }
 
-// InitLedger adds a base set of transactions to the ledger
+// InitLedger adds a base set of transactions to the ledger.
 func (s *SmartContract) InitLedger(tci contractapi.TransactionContextInterface) error {
 	transactions := []Transaction{
 		{
-			//From:      "0",
-			//To:        "18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
-			//Amount:    "2102476dc5753c293baa1c4ae9fa2811385a1e205527a72c318cf4fbd33d062773a12102c74671e5911979bb9fae19cadc5517ab6f09700e1eb044b62df1a7c1f18d4d550cb54c6c2f66c2c6ca2b08166414a2269638542e45369c568ec163675d8e8971f60109736563703235366b3100",
 			Binding:   "test_binding",
 			Timestamp: 0,
 		},
 	}
-
 	sha256Func := sha256.New()
 	for _, tx := range transactions {
 		// compose transaction key: SHA256 hash of the transaction in JSON format
@@ -114,7 +108,7 @@ func (s *SmartContract) DeleteTX(ctx contractapi.TransactionContextInterface, id
 	return ctx.GetStub().DelState(id)
 }
 
-// TXExists returns true when transaction with given ID exists in world state
+// TXExists returns true when transaction with given ID exists in world state.
 func (s *SmartContract) TXExists(ctx contractapi.TransactionContextInterface, id string) (bool, error) {
 	transactionJSON, err := ctx.GetStub().GetState(id)
 	if err != nil {
@@ -123,7 +117,7 @@ func (s *SmartContract) TXExists(ctx contractapi.TransactionContextInterface, id
 	return transactionJSON != nil, nil
 }
 
-// GetAllTXs returns all transactions found in world state
+// GetAllTXs returns all transactions found in world state.
 func (s *SmartContract) GetAllTXs(ctx contractapi.TransactionContextInterface) (txList []*Transaction, err error) {
 	// range query with empty string for startKey and endKey does an
 	// open-ended query of all transactions in the chaincode namespace.
