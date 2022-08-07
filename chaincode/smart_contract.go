@@ -56,7 +56,7 @@ func (s *SmartContract) InitLedger(tci contractapi.TransactionContextInterface) 
 }
 
 // CreateTX issues a new transaction to the world state with given details.
-func (s *SmartContract) CreateTX(ctx contractapi.TransactionContextInterface, binding string, timestamp int64) error {
+func (s *SmartContract) CreateTX(ctx contractapi.TransactionContextInterface, binding string, timestamp int64) (string, error) {
 	tx := Transaction{
 		Binding:   binding,
 		Timestamp: timestamp,
@@ -64,19 +64,19 @@ func (s *SmartContract) CreateTX(ctx contractapi.TransactionContextInterface, bi
 	// compose transaction key
 	txJSON, err := json.Marshal(tx)
 	if err != nil {
-		return err
+		return "", err
 	}
 	hash := sha256.New()
 	hash.Write(txJSON)
 	txKey := hex.EncodeToString(hash.Sum(nil))
 	exists, err := s.TXExists(ctx, txKey)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if exists {
-		return fmt.Errorf("the transaction %s already exists", txKey)
+		return "", fmt.Errorf("the transaction %s already exists", txKey)
 	}
-	return ctx.GetStub().PutState(txKey, txJSON)
+	return txKey, ctx.GetStub().PutState(txKey, txJSON)
 }
 
 // ReadTX returns the transaction stored in the world state with given id.
