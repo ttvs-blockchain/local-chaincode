@@ -81,19 +81,19 @@ func (s *SmartContract) CreateTX(ctx contractapi.TransactionContextInterface, bi
 
 // ReadTX returns the transaction stored in the world state with given id.
 func (s *SmartContract) ReadTX(ctx contractapi.TransactionContextInterface, id string) (*Transaction, error) {
-	transactionJSON, err := ctx.GetStub().GetState(id)
+	txJSON, err := ctx.GetStub().GetState(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from world state: %v", err)
 	}
-	if transactionJSON == nil {
+	if txJSON == nil {
 		return nil, fmt.Errorf("the transaction %s does not exist", id)
 	}
-	var transaction *Transaction
-	err = json.Unmarshal(transactionJSON, transaction)
+	tx := new(Transaction)
+	err = json.Unmarshal(txJSON, tx)
 	if err != nil {
 		return nil, err
 	}
-	return transaction, nil
+	return tx, nil
 }
 
 // DeleteTX deletes a given transaction from the world state.
