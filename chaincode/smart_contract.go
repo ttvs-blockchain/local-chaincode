@@ -20,16 +20,24 @@ type SmartContract struct {
 // Transaction describes basic details of what makes up a simple transaction.
 // Insert struct field in alphabetic order => to achieve determinism across languages.
 // golang keeps the order when marshal to json but doesn't order automatically.
-type Transaction []byte
+type Transaction struct {
+	Hash []byte `json:"hash"`
+}
 
 // InitLedger adds a base set of transactions to the ledger.
 func (s *SmartContract) InitLedger(tci contractapi.TransactionContextInterface) error {
 	transactions := []Transaction{
-		[]byte("test"),
+		{
+			Hash: []byte("0x1234567890"),
+		},
+	}
+	txJSON, err := json.Marshal(transactions)
+	if err != nil {
+		return err
 	}
 	for _, tx := range transactions {
-		txKey := hex.EncodeToString(tx)
-		if err := tci.GetStub().PutState(txKey, tx); err != nil {
+		txKey := hex.EncodeToString(tx.Hash)
+		if err := tci.GetStub().PutState(txKey, txJSON); err != nil {
 			return fmt.Errorf("failed to put to world state: %v", err)
 		}
 	}
@@ -38,10 +46,6 @@ func (s *SmartContract) InitLedger(tci contractapi.TransactionContextInterface) 
 
 // CreateTX issues a new transaction to the world state with given details.
 func (s *SmartContract) CreateTX(ctx contractapi.TransactionContextInterface, hash string) (string, error) {
-	tx, err := hex.DecodeString(hash)
-	if err != nil {
-		return "", err
-	}
 	exists, err := s.TXExists(ctx, hash)
 	if err != nil {
 		return "", err
@@ -49,7 +53,18 @@ func (s *SmartContract) CreateTX(ctx contractapi.TransactionContextInterface, ha
 	if exists {
 		return "", fmt.Errorf("the transaction %s already exists", hash)
 	}
-	return hash, ctx.GetStub().PutState(hash, tx)
+	txContent, err := hex.DecodeString(hash)
+	if err != nil {
+		return "", err
+	}
+	tx := Transaction{
+		Hash: txContent,
+	}
+	txJSON, err := json.Marshal(tx)
+	if err != nil {
+		return "", err
+	}
+	return hash, ctx.GetStub().PutState(hash, txJSON)
 }
 
 //// ReadTX returns the transaction stored in the world state with given id.
